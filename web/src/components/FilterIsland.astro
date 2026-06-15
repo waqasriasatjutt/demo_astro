@@ -1,0 +1,148 @@
+---
+// =============================================================================
+// Prop Sparsity (Rule 3) — this island receives ONLY identifiers.
+// =============================================================================
+// Props (the small, serializable identifiers):
+//   - shop:      "martial-arts-ch"
+//   - locale:    "de-CH"
+//   - category:  "boxing-gloves"
+//
+// NOT in props: products, facets, prices, names, images. All of that
+// is fetched by the island ITSELF from the BFF — never passed down
+// as full JSON. The browser ships ~30 bytes of props instead of ~10 KB
+// of product data, so initial HTML stays small and CDN-cacheable.
+// =============================================================================
+
+interface Props {
+  shop: string;
+  locale: string;
+  category: string;
+}
+const { shop, locale, category } = Astro.props;
+const propsJson = JSON.stringify({ shop, locale, category });
+---
+
+<div
+  id="filter-island"
+  class="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6"
+  data-props={propsJson}
+>
+  <!-- Filter sidebar -->
+  <aside class="space-y-5">
+    <div id="facets" class="space-y-5">
+      <div class="text-sm text-gray-500">Lade Filter…</div>
+    </div>
+  </aside>
+
+  <!-- Product grid -->
+  <section>
+    <div class="flex justify-between items-baseline mb-4">
+      <h2 class="text-2xl font-semibold">Boxhandschuhe</h2>
+      <div class="text-sm text-gray-500"><span id="count">–</span> Produkte</div>
+    </div>
+    <div id="grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <div id="empty" class="hidden text-gray-500 mt-8">Keine Produkte für diese Auswahl.</div>
+  </section>
+</div>
+
+<script>
+  // -------- island bootstrap --------
+  // Read the sparse props from the data attribute and fetch everything
+  // else from the BFF. NOTHING here calls Odoo or Typesense directly.
+  type Counts = { v: string; n: number }[];
+  type Facets = { brand: Counts; size: Counts; weight_oz: Counts; color: Counts };
+  type Card = { slug: string; name: string; price_chf: number; img: string };
+  type Result = { _contract: string; locale: string; currency: string; total: number; products: Card[]; facets: Facets };
+
+  const island = document.getElementById("filter-island")!;
+  const props = JSON.parse(island.dataset.props || "{}") as { shop: string; locale: string; category: string };
+
+  type Applied = { brand: string[]; size: string[]; weight_oz: string[]; color: string[] };
+  const applied: Applied = { brand: [], size: [], weight_oz: [], color: [] };
+
+  async function fetchFacets(): Promise<Result> {
+    const res = await fetch("/api/catalog/facets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        shop: props.shop,
+        locale: props.locale,
+        category_slug: props.category,
+        applied_filters: applied,
+        facets_requested: ["brand", "size", "weight_oz", "color"],
+        page: 1,
+        page_size: 24,
+      }),
+    });
+    return await res.json() as Result;
+  }
+
+  function renderFacets(facets: Facets) {
+    const labels: Record<keyof Facets, string> = {
+      brand: "Marke",
+      size: "Grösse",
+      weight_oz: "Gewicht",
+      color: "Farbe",
+    };
+    const root = document.getElementById("facets")!;
+    root.innerHTML = "";
+    (Object.keys(labels) as (keyof Facets)[]).forEach((key) => {
+      const block = document.createElement("div");
+      block.className = "border-b pb-4";
+      const counts = facets[key] || [];
+      const list = counts.map((c) => {
+        const checked = applied[key].includes(c.v);
+        return `<label class="flex items-center gap-2 py-1 cursor-pointer">
+          <input type="checkbox" data-key="${key}" data-value="${c.v}" ${checked ? "checked" : ""}/>
+          <span class="text-sm flex-1">${c.v}</span>
+          <span class="text-xs text-gray-400">${c.n}</span>
+        </label>`;
+      }).join("");
+      block.innerHTML = `<div class="font-medium mb-2">${labels[key]}</div>${list || '<div class="text-xs text-gray-400">—</div>'}`;
+      root.appendChild(block);
+    });
+    root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((box) => {
+      box.addEventListener("change", () => {
+        const key = box.dataset.key as keyof Facets;
+        const v = box.dataset.value!;
+        const arr = applied[key];
+        if (box.checked) { if (!arr.includes(v)) arr.push(v); }
+        else { const i = arr.indexOf(v); if (i >= 0) arr.splice(i, 1); }
+        load();
+      });
+    });
+  }
+
+  function renderGrid(products: Card[], currency: string) {
+    const grid = document.getElementById("grid")!;
+    const empty = document.getElementById("empty")!;
+    grid.innerHTML = "";
+    if (!products.length) {
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+    products.forEach((p) => {
+      const card = document.createElement("a");
+      card.className = "block border rounded-lg overflow-hidden hover:shadow-lg transition";
+      card.href = `#${p.slug}`;
+      card.innerHTML = `
+        <img src="${p.img}" alt="${p.name}" class="w-full aspect-square object-cover bg-gray-100" />
+        <div class="p-3">
+          <div class="text-sm font-medium line-clamp-2">${p.name}</div>
+          <div class="text-sm text-gray-600 mt-1">${currency} ${p.price_chf.toFixed(2)}</div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  async function load() {
+    const data = await fetchFacets();
+    document.getElementById("count")!.textContent = String(data.total);
+    renderFacets(data.facets);
+    renderGrid(data.products, data.currency);
+    // Show contract version in console — proves the version pin.
+    console.log("[BFF response contract]", data._contract);
+  }
+  load();
+</script>

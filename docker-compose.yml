@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: shop-demo-typesense
+    restart: unless-stopped
+    environment:
+      TYPESENSE_API_KEY: demo-key
+      TYPESENSE_DATA_DIR: /data
+    volumes:
+      - typesense-data:/data
+    networks:
+      - shop-demo-net
+
+  bff:
+    build: .
+    container_name: shop-demo
+    restart: unless-stopped
+    depends_on:
+      - typesense
+    environment:
+      PORT: 3000
+      TYPESENSE_HOST: typesense
+      TYPESENSE_PORT: 8108
+      TYPESENSE_PROTOCOL: http
+      TYPESENSE_API_KEY: demo-key
+      ODOO_URL: https://example.invalid/jsonrpc
+      ODOO_DB: martial-arts-demo
+      ODOO_API_KEY: demo-key
+    ports:
+      - "127.0.0.1:13000:3000"
+    networks:
+      - shop-demo-net
+
+volumes:
+  typesense-data:
+
+networks:
+  shop-demo-net:

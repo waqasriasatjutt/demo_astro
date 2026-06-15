@@ -1,0 +1,83 @@
+---
+import FilterIsland from "../components/FilterIsland.astro";
+
+// =============================================================================
+// Headless Odoo demo — one PLP page. All 5 framework rules visible at once.
+// =============================================================================
+// On this page:
+//
+// 1. BFF Law      — The island below only ever fetches /api/catalog/facets
+//                   and /graphql, both on the BFF. Open DevTools Network tab:
+//                   no other origin is contacted.
+//
+// 2. Data Contract — Every BFF response carries `_contract: "Product@v1"`.
+//                    Open DevTools console — the island logs it.
+//
+// 3. Prop Sparsity — <FilterIsland> receives ONLY { shop, locale, category }
+//                    as props. All product data is fetched by the island
+//                    itself from the BFF.
+//
+// 4. Search Offload — The BFF resolves the filter request via Typesense,
+//                     never against Odoo. The Odoo backend in /bff/sync/
+//                     is a stub with a `// in production: POST /jsonrpc` seam.
+//
+// 5. Template Governance — /bff/tenants/martial-arts-ch.config.ts declares
+//                          which feature modules are enabled for THIS shop.
+//                          A second tenant ("premium-watches-ch") shows the
+//                          same shape with different toggles.
+// =============================================================================
+---
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Martial Arts CH — Headless Odoo Demo</title>
+    <meta name="description" content="Headless Odoo + BFF + Typesense + Astro demo. Proves BFF Law, Data Contract, Prop Sparsity, Search Offload, Template Governance." />
+  </head>
+  <body class="bg-white text-gray-900 antialiased">
+    <header class="border-b">
+      <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div>
+          <div class="font-semibold">Martial Arts CH</div>
+          <div class="text-xs text-gray-500">Headless Odoo demo · BFF + Typesense + Astro</div>
+        </div>
+        <nav class="text-sm space-x-4">
+          <a href="/graphql" class="text-gray-600 hover:text-black">GraphiQL</a>
+          <a href="https://github.com/waqasriasatjutt/martial-arts-headless-demo" class="text-gray-600 hover:text-black">Repo</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+      <!-- Server-rendered intro: facts the page knows at build time,
+           NOT product data (that stays in the BFF). -->
+      <section class="mb-8 bg-gray-50 border rounded-lg p-4 text-sm leading-6">
+        <p class="text-gray-700">
+          This page is one Astro server island. It receives only
+          <code class="bg-white px-1 border rounded">{ shop, locale, category }</code>
+          as props — no products, no facets, no JSON payload from the server.
+          It then fetches its data slice from the BFF at
+          <code class="bg-white px-1 border rounded">/api/catalog/facets</code>
+          (and equivalent <code class="bg-white px-1 border rounded">/graphql</code>).
+          Open DevTools Network — Odoo is never contacted; only the BFF is.
+        </p>
+      </section>
+
+      <!--
+        Prop sparsity in action: the island receives 3 identifiers, no payload.
+        Equivalent of Astro `server:defer` on a real PLP — for this static
+        build we use vanilla client-side fetch.
+      -->
+      <FilterIsland shop="martial-arts-ch" locale="de-CH" category="boxing-gloves" />
+    </main>
+
+    <footer class="border-t mt-12 py-6 text-xs text-gray-500">
+      <div class="max-w-6xl mx-auto px-4 flex justify-between flex-wrap gap-2">
+        <div>Built by Waqas Riasat — <a class="underline" href="mailto:waqasriasatjutt@gmail.com">waqasriasatjutt@gmail.com</a></div>
+        <div>Stack: Hono · GraphQL Yoga · Zod · Typesense · Astro · Tailwind</div>
+      </div>
+    </footer>
+  </body>
+</html>
