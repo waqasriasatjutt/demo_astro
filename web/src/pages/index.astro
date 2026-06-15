@@ -56,7 +56,7 @@ import FilterIsland from "../components/FilterIsland.astro";
       <section class="mb-8 bg-gray-50 border rounded-lg p-4 text-sm leading-6">
         <p class="text-gray-700">
           This page is one Astro server island. It receives only
-          <code class="bg-white px-1 border rounded">{ shop, locale, category }</code>
+          <code class="bg-white px-1 border rounded">&#123; shop, locale, category &#125;</code>
           as props — no products, no facets, no JSON payload from the server.
           It then fetches its data slice from the BFF at
           <code class="bg-white px-1 border rounded">/api/catalog/facets</code>
