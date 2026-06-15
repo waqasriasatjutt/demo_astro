@@ -185,7 +185,9 @@ app.all("/graphql", async (c) => {
 app.get("/healthz", (c) => c.json({ ok: true, contract: CONTRACT_VERSION }));
 
 // Astro static build is served at /
-app.use("/*", serveStatic({ root: "./web/dist" }));
+// In docker the layout is /app/bff (CWD) and /app/web/dist, so go up one level.
+const STATIC_ROOT = process.env.STATIC_ROOT || "../web/dist";
+app.use("/*", serveStatic({ root: STATIC_ROOT }));
 
 const PORT = Number(process.env.PORT || 3000);
 serve({ fetch: app.fetch, port: PORT }, (info) => {
