@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Headless BFF — Phase 1 API</title>
+<style>
+  * { box-sizing: border-box }
+  body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; color: #1c2333; background: #f6f7f9; line-height: 1.5 }
+  header { background: #10141c; color: #fff; padding: 22px 24px }
+  header h1 { margin: 0 0 4px; font-size: 20px }
+  header .url { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: #8fb4ff }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px }
+  .intro { background: #fff; border: 1px solid #e3e6ec; border-radius: 12px; padding: 16px 18px; margin-bottom: 18px }
+  .intro code, code { background: #eef0f4; padding: 1px 6px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; font-size: 13px }
+  .authbar { display: flex; gap: 8px; align-items: center; margin-top: 12px }
+  .authbar input { flex: 1; padding: 7px 10px; border: 1px solid #d3d7df; border-radius: 8px; font-family: ui-monospace, monospace; font-size: 12px }
+  .op { background: #fff; border: 1px solid #e3e6ec; border-radius: 12px; padding: 18px; margin-bottom: 16px }
+  .op h2 { margin: 0 0 4px; font-size: 17px; display: flex; align-items: center; gap: 10px }
+  .tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .3px }
+  .q { background: #e5f0ff; color: #1f5fd0 } .m { background: #fdeede; color: #c26512 } .auth { background: #fde8e8; color: #c23b3b }
+  .desc { color: #4a5266; margin: 4px 0 12px }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 13px }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eceef2; vertical-align: top }
+  th { color: #6b7280; font-weight: 600 }
+  td code { font-size: 12px }
+  .req { font-size: 11px; color: #c23b3b; font-weight: 600 }
+  label { font-size: 12px; font-weight: 600; color: #6b7280; display: block; margin: 10px 0 4px }
+  textarea { width: 100%; min-height: 78px; padding: 10px; border: 1px solid #d3d7df; border-radius: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; resize: vertical }
+  .run { margin-top: 10px; padding: 8px 18px; border: 0; border-radius: 8px; background: #2563eb; color: #fff; font-weight: 600; cursor: pointer }
+  .resp { margin-top: 10px; background: #0d1117; color: #d7dbe2; padding: 12px; border-radius: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; min-height: 20px; max-height: 340px; overflow: auto }
+  h3.section { margin: 26px 0 10px; font-size: 15px; color: #10141c }
+</style>
+</head>
+<body>
+<header>
+  <h1>Headless BFF — Phase 1 API</h1>
+  <div class="url">POST https://poc.way4tech.com/graphql</div>
+</header>
+<div class="wrap">
+
+  <div class="intro">
+    One endpoint. Every call is <strong>POST</strong> to <code>/graphql</code> with header <code>Content-Type: application/json</code> and a body
+    <code>{ "query": "...", "variables": { ... } }</code>. The <strong>Run</strong> buttons below hit the live staging Odoo — edit the body and re-run.
+    Auth calls need <code>Authorization: Bearer &lt;token&gt;</code> — paste a token here after logging in:
+    <div class="authbar">
+      <input id="jwt" placeholder="JWT goes here (auto-filled after you Run Login)">
+    </div>
+    Test customer: <code>buyer@example.com</code> / <code>demo1234</code>.
+  </div>
+
+  <h3 class="section">Products</h3>
+
+  <div class="op">
+    <h2>products <span class="tag q">query</span></h2>
+    <div class="desc">Catalog with live stock from Odoo. No parameters.</div>
+    <label>Request body</label>
+    <textarea>{"query":"{ products { variant_id sku name price_chf free_qty availability } }"}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <div class="op">
+    <h2>product <span class="tag q">query</span></h2>
+    <div class="desc">One product with its variants.</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>name</code> <span class="req">required</span></td><td>String</td><td>product template name</td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"query($n:String!){ product(name:$n){ name variant_axes variants{ variant_id sku price_chf availability } } }","variables":{"n":"Hayabusa T3 Boxing Gloves"}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <h3 class="section">Cart</h3>
+
+  <div class="op">
+    <h2>addToCart <span class="tag m">mutation</span></h2>
+    <div class="desc">Adds a variant. First add (no cart_token) starts a guest cart = a draft <code>sale.order</code> in Odoo. Blocked if over stock.</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>variant_id</code> <span class="req">required</span></td><td>Int</td><td>from <code>products</code></td></tr>
+      <tr><td><code>qty</code></td><td>Float</td><td>default 1</td></tr>
+      <tr><td><code>cart_token</code></td><td>String</td><td>omit to start a new cart; pass to add to an existing one</td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"mutation($v:Int!,$q:Float,$t:String){ addToCart(variant_id:$v, qty:$q, cart_token:$t){ cart_token order_id state total_chf lines{ name qty unit_price_chf } } }","variables":{"v":2,"q":1,"t":null}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <div class="op">
+    <h2>cart <span class="tag q">query</span></h2>
+    <div class="desc">Read a cart by its token.</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>cart_token</code> <span class="req">required</span></td><td>String</td><td>from <code>addToCart</code></td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"query($c:String!){ cart(cart_token:$c){ cart_token order_id state total_chf lines{ name qty } } }","variables":{"c":"PASTE_cart_token"}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <h3 class="section">Auth</h3>
+
+  <div class="op">
+    <h2>login <span class="tag m">mutation</span></h2>
+    <div class="desc">Portal (<code>res.users</code>) authentication. Returns a stateless JWT. Pass a guest cart token to merge it into the customer on login.</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>portal login</td></tr>
+      <tr><td><code>password</code> <span class="req">required</span></td><td>String</td><td>wrong password → <code>AUTH_INVALID_CREDENTIALS</code></td></tr>
+      <tr><td><code>guest_cart_token</code></td><td>String</td><td>optional — merges that cart</td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"mutation($e:String!,$p:String!,$g:String){ login(email:$e, password:$p, guest_cart_token:$g){ token partner_id display_name cart{ state total_chf lines{ name qty } } } }","variables":{"e":"buyer@example.com","p":"demo1234","g":null}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <div class="op">
+    <h2>mergeGuestCart <span class="tag m">mutation</span> <span class="tag auth">needs token</span></h2>
+    <div class="desc">Explicit guest → customer merge. Requires the JWT in the box at the top (auto-filled after Login).</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>guest_cart_token</code> <span class="req">required</span></td><td>String</td><td>the guest cart to fold in</td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"mutation($g:String!){ mergeGuestCart(guest_cart_token:$g){ state total_chf lines{ name qty } } }","variables":{"g":"PASTE_cart_token"}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <h3 class="section">Types</h3>
+  <div class="intro">
+    <table>
+      <tr><th>Type</th><th>Fields</th></tr>
+      <tr><td><code>Variant</code></td><td>variant_id Int, sku String, name String, price_chf Float, free_qty Float, availability String (in_stock / low_stock / out_of_stock)</td></tr>
+      <tr><td><code>Cart</code></td><td>cart_token String, order_id Int, partner_id Int, state String (guest / active / merged / converted), currency String, lines [CartLine], subtotal_chf / tax_chf / total_chf Float</td></tr>
+      <tr><td><code>CartLine</code></td><td>line_id Int, variant_id Int, name String, qty Float, unit_price_chf Float, subtotal_chf Float</td></tr>
+      <tr><td><code>Session</code></td><td>token String (JWT), partner_id Int, display_name String, cart Cart</td></tr>
+    </table>
+  </div>
+
+  <h3 class="section">Errors</h3>
+  <div class="intro">
+    Failures return <code>{ "errors": [...] }</code> with <code>extensions.code</code> from a fixed set and a translated <code>extensions.user_message { de, fr, it, en }</code>. Switch on <code>code</code>, never on the text.
+    <table>
+      <tr><th>code</th><th>when</th></tr>
+      <tr><td><code>CART_STOCK_INSUFFICIENT</code></td><td>ordering more than available stock</td></tr>
+      <tr><td><code>CART_VARIANT_UNAVAILABLE</code></td><td>variant archived / inactive</td></tr>
+      <tr><td><code>AUTH_INVALID_CREDENTIALS</code></td><td>wrong email or password</td></tr>
+      <tr><td><code>ODOO_ACCESS_DENIED</code> / <code>ODOO_UNAVAILABLE</code></td><td>upstream Odoo issue</td></tr>
+      <tr><td><code>INTERNAL</code></td><td>anything unmapped</td></tr>
+    </table>
+  </div>
+
+</div>
+<script>
+  async function run(btn) {
+    const op = btn.closest(".op");
+    const body = op.querySelector("textarea").value;
+    const out = op.querySelector(".resp");
+    const token = document.getElementById("jwt").value.trim();
+    const headers = { "content-type": "application/json" };
+    if (token) headers["authorization"] = "Bearer " + token;
+    out.textContent = "running…";
+    try {
+      const r = await fetch("/graphql", { method: "POST", headers: headers, body: body });
+      const j = await r.json();
+      out.textContent = JSON.stringify(j, null, 2);
+      if (j.data && j.data.login && j.data.login.token) {
+        document.getElementById("jwt").value = j.data.login.token;
+      }
+    } catch (e) { out.textContent = "error: " + e.message; }
+  }
+</script>
+</body>
+</html>

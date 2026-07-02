@@ -224,14 +224,19 @@ const yoga = createYoga({
 })
 
 const DEMO = readFileSync(new URL('./demo.html', import.meta.url), 'utf8')
+const DOCS = readFileSync(new URL('./docs.html', import.meta.url), 'utf8')
 
 await initKeys()
 await uid()
 createServer(async (req, res) => {
-  if (req.method === 'GET' && (req.url === '/demo' || req.url === '/demo/' || req.url === '/')) {
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
-    res.end(DEMO)
-    return
+  if (req.method === 'GET') {
+    const path = (req.url || '').split('?')[0]
+    if (path === '/docs' || path === '/docs/' || path === '/' || path === '') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(DOCS); return
+    }
+    if (path === '/demo' || path === '/demo/') {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); res.end(DEMO); return
+    }
   }
   return yoga(req, res)
 }).listen(PORT, () => console.log(`Phase-1 BFF on :${PORT}  ->  Odoo ${ODOO_URL}`))
