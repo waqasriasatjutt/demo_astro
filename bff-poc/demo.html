@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Headless storefront — Phase 1 demo</title>
+<style>
+  :root { color-scheme: dark }
+  * { box-sizing: border-box }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #0f1115; color: #e7e9ee }
+  header { padding: 16px 20px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 20px }
+  .cart { position: sticky; top: 12px; z-index: 5; background: #171a21; border: 1px solid #262b36; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px }
+  .card { background: #171a21; border: 1px solid #262b36; border-radius: 12px; padding: 14px; display: flex; flex-direction: column }
+  .name { font-size: 14px; margin: 0 0 10px; min-height: 34px }
+  .row { display: flex; align-items: center; justify-content: space-between }
+  .price { font-weight: 600 }
+  .badge { font-size: 11px; padding: 2px 9px; border-radius: 999px }
+  .in { background: #123d24; color: #6ee7a0 } .low { background: #40320c; color: #f5c451 } .out { background: #3d1414; color: #f38b8b }
+  button { margin-top: 12px; width: 100%; padding: 9px; border: 0; border-radius: 8px; background: #3b82f6; color: #fff; font-weight: 600; cursor: pointer }
+  button:disabled { background: #2a2e38; color: #6b7180; cursor: not-allowed }
+  small { color: #8b90a0 } code { background: #0b0d11; padding: 1px 5px; border-radius: 4px; font-size: 12px }
+  a { color: #6ea8fe }
+</style>
+</head>
+<body>
+<header>
+  <strong>Headless storefront</strong>
+  <small>browser → BFF (<code>/graphql</code>) → Odoo · nothing hits Odoo directly</small>
+</header>
+<div class="wrap">
+  <div class="cart"><small>CART</small><div id="cartbody">empty — add something below</div></div>
+  <div class="grid" id="grid">loading…</div>
+  <p style="margin-top:22px"><small>Every card + button here is one <code>fetch()</code> to the BFF. Add to cart and a draft order shows up in Odoo &rarr; Sales &rarr; Orders. Try the out-of-stock one — the button is disabled from live stock, and forcing it returns a structured error.</small></p>
+</div>
+<script>
+  const API = "/graphql";
+  let cartToken = null;
+
+  async function gql(query, variables) {
+    const r = await fetch(API, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
+    return r.json();
+  }
+
+  function badge(a) {
+    if (a === "in_stock") return '<span class="badge in">in stock</span>';
+    if (a === "low_stock") return '<span class="badge low">low stock</span>';
+    return '<span class="badge out">out of stock</span>';
+  }
+  function clean(name) { return name.replace(/^\[[^\]]+\]\s*/, ""); }
+
+  async function load() {
+    const { data } = await gql("{ products { variant_id sku name price_chf free_qty availability } }");
+    document.getElementById("grid").innerHTML = data.products.map(function (p) {
+      return '<div class="card">'
+        + '<p class="name">' + clean(p.name) + "</p>"
+        + '<div class="row"><span class="price">CHF ' + p.price_chf + "</span> " + badge(p.availability) + "</div>"
+        + "<button " + (p.availability === "out_of_stock" ? "disabled" : "") + ' onclick="add(' + p.variant_id + ')">Add to cart</button>'
+        + "</div>";
+    }).join("");
+  }
+
+  async function add(vid) {
+    const { data, errors } = await gql(
+      "mutation($v:Int!,$t:String){ addToCart(variant_id:$v, qty:1, cart_token:$t){ cart_token state total_chf lines{ name qty } } }",
+      { v: vid, t: cartToken }
+    );
+    if (errors) { document.getElementById("cartbody").innerHTML = '<span style="color:#f38b8b">' + errors[0].extensions.user_message.en + " (" + errors[0].extensions.code + ")</span>"; return; }
+    const c = data.addToCart;
+    cartToken = c.cart_token;
+    const items = c.lines.reduce(function (n, l) { return n + l.qty; }, 0);
+    document.getElementById("cartbody").innerHTML =
+      items + " item(s) &middot; <strong>CHF " + c.total_chf + "</strong><br>"
+      + "<small>state: " + c.state + " &middot; cart <code>" + c.cart_token + "</code> &middot; live draft order in Odoo</small>";
+  }
+
+  load();
+</script>
+</body>
+</html>

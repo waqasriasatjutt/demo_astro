@@ -7,6 +7,7 @@ import crypto from 'node:crypto'
 import { createYoga, createSchema } from 'graphql-yoga'
 import { GraphQLError } from 'graphql'
 import { SignJWT, jwtVerify, generateKeyPair } from 'jose'
+import { readFileSync } from 'node:fs'
 
 // All Odoo connection values come from env — nothing sensitive is committed.
 const ODOO_URL = process.env.ODOO_URL || 'https://your-odoo.example'
@@ -181,9 +182,13 @@ const resolvers = {
       await addLine(orderId, variant_id, qty)
       return projectCart(orderId)
     },
-    // Flow 1+2 — issue JWT, and if a guest cart is passed, merge it into the partner.
-    login: async (_p, { email, guest_cart_token }) => {
-      const partner = await findOrCreatePartner(email)
+    // Flow 1+2 — portal auth: verify the shopper against Odoo res.users, then
+    // issue the JWT and merge a guest cart if one is passed.
+    login: async (_p, { email, password, guest_cart_token }) => {
+      const cuid = await rpc('common', 'authenticate', [DB, email, password, {}])
+      if (!cuid) throw new GraphQLError('Invalid email or password.', { extensions: taxo('AUTH_INVALID_CREDENTIALS', { de: 'Ungültige E-Mail oder Passwort.', fr: 'E-mail ou mot de passe invalide.', it: 'Email o password non validi.', en: 'Invalid email or password.' }, 'auth', 401, false, 'odoo.exceptions.AccessDenied') })
+      const [user] = await call('res.users', 'read', [[cuid], ['partner_id', 'name']])
+      const partner = { id: user.partner_id[0], name: user.partner_id[1] || user.name, email }
       const token = await issueJwt(partner)
       let cartId = await activeCartFor(partner.id)
       if (guest_cart_token) cartId = await doMerge(guest_cart_token, partner.id)
@@ -218,6 +223,15 @@ const yoga = createYoga({
   maskedErrors: false,
 })
 
+const DEMO = readFileSync(new URL('./demo.html', import.meta.url), 'utf8')
+
 await initKeys()
 await uid()
-createServer(yoga).listen(PORT, () => console.log(`Phase-1 BFF on :${PORT}  ->  Odoo ${ODOO_URL}`))
+createServer(async (req, res) => {
+  if (req.method === 'GET' && (req.url === '/demo' || req.url === '/demo/' || req.url === '/')) {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
+    res.end(DEMO)
+    return
+  }
+  return yoga(req, res)
+}).listen(PORT, () => console.log(`Phase-1 BFF on :${PORT}  ->  Odoo ${ODOO_URL}`))
