@@ -1,0 +1,131 @@
+# =============================================================================
+# Headless Odoo 19 — BFF GraphQL contracts (versioned). REVIEW COPY.
+# Concepts-first: this is the shape Ashvin's Odoo output maps INTO and Zuanda's
+# Astro islands consume. Redline here before anyone builds against it.
+#
+# Conventions:
+#   - every payload carries `_contract` (Product@v1, Variant@v1, ...).
+#   - i18n fields resolve requested -> de -> en server-side; UI gets a String.
+#   - Rule 3: islands receive IDs; the BFF resolves the rest on hydration.
+#   - Rule 4: listing/facets are served from Typesense, never Odoo on the click.
+# =============================================================================
+
+enum Locale { de fr it en }
+enum ValidationState { draft needs_translation publishable live }
+enum Availability { in_stock low_stock out_of_stock }
+enum CartState { guest active merged converted }
+
+type AttrKV { k: String!  v: String! }
+
+# ---- Product@v1 : listing card (from Typesense) ----
+type ProductCard {
+  _contract: String!
+  slug: String!
+  brand: String!
+  name: String!
+  price_from_chf: Float!
+  img: String!
+  availability: Availability!
+}
+
+# ---- Variant@v1 : PDP + add-to-cart (stock lives here) ----
+type Stock { free_qty: Int  availability: Availability! }
+type Variant {
+  _contract: String!
+  variant_id: Int!
+  sku: String!
+  attributes: [AttrKV!]!
+  price_chf: Float!
+  stock: Stock!
+}
+type ProductDetail {
+  _contract: String!        # "Product@v1"
+  slug: String!
+  name: String!
+  variant_axes: [String!]!  # e.g. ["size","weight_oz","color"]
+  variants: [Variant!]!
+}
+
+# ---- Cart@v1 : a projection of a draft sale.order ----
+type CartLine {
+  line_id: Int!
+  variant_id: Int!
+  sku: String!
+  name: String!
+  qty: Int!
+  unit_price_chf: Float!
+  subtotal_chf: Float!
+  availability: Availability!
+}
+type Cart {
+  _contract: String!
+  cart_token: ID!
+  order_id: Int
+  partner_id: Int
+  state: CartState!
+  locale: Locale!
+  currency: String!
+  lines: [CartLine!]!
+  subtotal_chf: Float!
+  tax_chf: Float!
+  total_chf: Float!
+}
+
+# ---- Customer@v1 / session ----
+type Customer {
+  _contract: String!
+  partner_id: Int!
+  email: String!
+  display_name: String!
+  locale: Locale!
+}
+type Session {
+  _contract: String!        # "Customer@v1"
+  token: String!            # BFF-issued JWT (stateless, RS256)
+  partner_id: Int!
+  display_name: String!
+  locale: Locale!
+  cart: Cart!               # the surviving cart after login-merge
+}
+
+# ---- Order@v1 ----
+type Order {
+  _contract: String!
+  order_id: Int!
+  name: String!
+  state: String!            # draft (Phase 1)
+  cart_token: ID!
+  amount_total_chf: Float!
+}
+
+type Query {
+  product(slug: String!, locale: Locale! = de): ProductDetail!
+  cart(cart_token: ID!): Cart!
+  me: Customer                                    # requires JWT
+}
+
+type Mutation {
+  # Phase 1 #1 — authenticate against Odoo res.users, issue stateless JWT.
+  login(email: String!, password: String!, guest_cart_token: ID): Session!
+  # Phase 1 #1 — first add creates the draft sale.order in Odoo via /jsonrpc.
+  addToCart(cart_token: ID, variant_id: Int!, qty: Int! = 1): Cart!
+  # Phase 1 #2 — explicit guest -> partner merge (also runs inside login()).
+  mergeGuestCart(guest_cart_token: ID!): Cart!
+}
+
+# ---- Error taxonomy (Phase 1 #3) --------------------------------------------
+# Errors are NOT GraphQL types. They arrive in the standard `errors[].extensions`:
+#   extensions.code:        one of the CLOSED set below (frontend switches on this)
+#   extensions.category:    auth | validation | conflict | upstream | internal
+#   extensions.retryable:   Boolean
+#   extensions.http_status: Int (advisory)
+#   extensions.user_message:{ de, fr, it, en }   # UI-ready, safe, translated
+#   extensions.odoo_origin: String               # our logs only, never shown
+#   extensions.ref:         String               # support correlation id
+#
+# Closed code set (adding one = version bump to Error@v2):
+#   AUTH_INVALID_CREDENTIALS  AUTH_TOKEN_EXPIRED  AUTH_TOKEN_INVALID
+#   CART_STOCK_INSUFFICIENT   CART_VARIANT_UNAVAILABLE  CART_EMPTY
+#   VALIDATION_REQUIRED_FIELD VALIDATION_CONSTRAINT
+#   PRICELIST_MISMATCH        COUPON_INVALID       PARTNER_BLOCKED
+#   ODOO_ACCESS_DENIED        ODOO_UNAVAILABLE     RATE_LIMITED   INTERNAL

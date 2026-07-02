@@ -17,7 +17,7 @@ export const CONTRACT_VERSION = "Product@v1";
 export const LocaleSchema = z.enum(["de", "fr", "it", "en"]);
 export type Locale = z.infer<typeof LocaleSchema>;
 
-const I18nString = z.object({
+export const I18nString = z.object({
   de: z.string().optional(),
   fr: z.string().optional(),
   it: z.string().optional(),

@@ -1,0 +1,24 @@
+{
+  "_note": "Error@v1 in the wire. Every BFF error carries extensions.code from a CLOSED set — the frontend switches on `code`, shows extensions.user_message[locale], and never parses `message`. This example is the stock-depletion case at add-to-cart / checkout.",
+  "errors": [
+    {
+      "message": "Not enough stock for this item.",
+      "path": ["addToCart"],
+      "extensions": {
+        "code": "CART_STOCK_INSUFFICIENT",
+        "category": "conflict",
+        "retryable": false,
+        "http_status": 409,
+        "odoo_origin": "odoo.exceptions.ValidationError",
+        "user_message": {
+          "de": "Nicht genügend Lagerbestand für diesen Artikel.",
+          "fr": "Stock insuffisant pour cet article.",
+          "it": "Scorte insufficienti per questo articolo.",
+          "en": "Not enough stock for this item."
+        },
+        "ref": "err_01HZY3K8Qf"
+      }
+    }
+  ],
+  "data": { "addToCart": null }
+}

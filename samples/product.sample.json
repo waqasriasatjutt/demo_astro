@@ -1,0 +1,57 @@
+{
+  "_note": "PDP payload = Product@v1 (template/listing) + its Variant@v1 array. Mock your components against this; swap the fetch when the BFF is live. Islands get IDs only (variant_id) and resolve the rest on hydration.",
+  "_contract": "Product@v1",
+  "slug": "hayabusa-t3-boxing-gloves",
+  "template_id": 42,
+  "brand": "Hayabusa",
+  "category_slugs": ["boxing-gloves"],
+  "name": {
+    "de": "Hayabusa T3 Boxhandschuhe",
+    "fr": "Gants de boxe Hayabusa T3",
+    "it": "Guantoni da boxe Hayabusa T3",
+    "en": "Hayabusa T3 Boxing Gloves"
+  },
+  "description": {
+    "de": "Premium-Boxhandschuhe mit Dual-X-Verschluss.",
+    "en": "Premium boxing gloves with the Dual-X closure system."
+  },
+  "price_from_chf": 189.0,
+  "image": "https://shop-demo.way4tech.com/img/hayabusa-t3.jpg",
+  "validation_state": "live",
+  "variant_axes": ["size", "weight_oz", "color"],
+  "variants": [
+    {
+      "_contract": "Variant@v1",
+      "variant_id": 501,
+      "template_id": 42,
+      "sku": "HYB-T3-16-BLK",
+      "attributes": { "size": "L", "weight_oz": "16oz", "color": "black" },
+      "price_chf": 189.0,
+      "stock": { "free_qty": 12, "availability": "in_stock", "low_stock_threshold": 5, "continue_selling": false },
+      "name": { "de": "Hayabusa T3 – L / 16oz / Schwarz", "en": "Hayabusa T3 – L / 16oz / Black" },
+      "validation_state": "live"
+    },
+    {
+      "_contract": "Variant@v1",
+      "variant_id": 502,
+      "template_id": 42,
+      "sku": "HYB-T3-14-BLK",
+      "attributes": { "size": "M", "weight_oz": "14oz", "color": "black" },
+      "price_chf": 189.0,
+      "stock": { "free_qty": 3, "availability": "low_stock", "low_stock_threshold": 5, "continue_selling": false },
+      "name": { "de": "Hayabusa T3 – M / 14oz / Schwarz", "en": "Hayabusa T3 – M / 14oz / Black" },
+      "validation_state": "live"
+    },
+    {
+      "_contract": "Variant@v1",
+      "variant_id": 503,
+      "template_id": 42,
+      "sku": "HYB-T3-16-RED",
+      "attributes": { "size": "L", "weight_oz": "16oz", "color": "red" },
+      "price_chf": 199.0,
+      "stock": { "free_qty": 0, "availability": "out_of_stock", "low_stock_threshold": 5, "continue_selling": false },
+      "name": { "de": "Hayabusa T3 – L / 16oz / Rot", "en": "Hayabusa T3 – L / 16oz / Red" },
+      "validation_state": "live"
+    }
+  ]
+}

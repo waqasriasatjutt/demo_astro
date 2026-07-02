@@ -1,0 +1,25 @@
+{
+  "_note": "Cart@v1 = a projection of a draft sale.order. `state:guest` until login; cart_token is stable across the guest->auth merge. Totals use CH VAT 8.1%.",
+  "_contract": "Cart@v1",
+  "cart_token": "3f9a7c1e-1d2b-4a5c-9e8f-0b1a2c3d4e5f",
+  "order_id": 1007,
+  "partner_id": null,
+  "state": "guest",
+  "locale": "de",
+  "currency": "CHF",
+  "lines": [
+    {
+      "line_id": 1,
+      "variant_id": 501,
+      "sku": "HYB-T3-16-BLK",
+      "name": "Hayabusa T3 – L / 16oz / Schwarz",
+      "qty": 1,
+      "unit_price_chf": 189.0,
+      "subtotal_chf": 189.0,
+      "availability": "in_stock"
+    }
+  ],
+  "subtotal_chf": 189.0,
+  "tax_chf": 15.31,
+  "total_chf": 204.31
+}
