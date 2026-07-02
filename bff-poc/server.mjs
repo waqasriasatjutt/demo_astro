@@ -113,7 +113,7 @@ async function projectCart(orderId) {
     _contract: 'Cart@v1', cart_token: o.client_order_ref, order_id: o.id,
     partner_id: o.partner_id[0] === pub ? null : o.partner_id[0], state: stateMap[o.state] || 'active',
     locale: 'de', currency: 'CHF',
-    lines: lines.map(l => ({ line_id: l.id, variant_id: l.product_id[0], sku: '', name: l.name, qty: l.product_uom_qty, unit_price_chf: l.price_unit, subtotal_chf: l.price_subtotal, availability: 'in_stock' })),
+    lines: lines.map(l => ({ line_id: l.id, variant_id: l.product_id[0], sku: '', name: (l.name || '').split('\n')[0], qty: l.product_uom_qty, unit_price_chf: l.price_unit, subtotal_chf: l.price_subtotal, availability: 'in_stock' })),
     subtotal_chf: o.amount_untaxed, tax_chf: o.amount_tax, total_chf: o.amount_total,
   }
 }
