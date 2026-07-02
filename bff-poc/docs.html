@@ -47,6 +47,10 @@
       <input id="jwt" placeholder="JWT goes here (auto-filled after you Run Login)">
     </div>
     Test customer: <code>buyer@example.com</code> / <code>demo1234</code>.
+    <label>Same call as a curl (note the full URL — that's the endpoint for every request):</label>
+    <pre class="resp">curl -X POST https://poc.way4tech.com/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ products { variant_id sku availability price_chf } }"}'</pre>
   </div>
 
   <h3 class="section">Products</h3>
