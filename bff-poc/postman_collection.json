@@ -1,0 +1,146 @@
+{
+  "info": {
+    "name": "Headless BFF - Phase 1",
+    "description": "Phase 1 flows against the staging Odoo. One URL, HTTP POST, GraphQL body. Run top to bottom: Add to cart saves {{cartToken}}, Login saves {{token}} - later requests reuse them automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://poc.way4tech.com/graphql" },
+    { "key": "cartToken", "value": "" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Products (list + live stock)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "{ products { variant_id sku name price_chf free_qty availability } }",
+            "variables": "{}"
+          }
+        }
+      }
+    },
+    {
+      "name": "2. Product + variants",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "query($n:String!){ product(name:$n){ name variant_axes variants{ variant_id sku price_chf availability } } }",
+            "variables": "{ \"n\": \"Hayabusa T3 Boxing Gloves\" }"
+          }
+        }
+      }
+    },
+    {
+      "name": "3. Add to cart (creates draft sale.order)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const j = pm.response.json();",
+              "if (j.data && j.data.addToCart) { pm.collectionVariables.set('cartToken', j.data.addToCart.cart_token); console.log('saved cartToken', j.data.addToCart.cart_token); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "mutation($v:Int!,$t:String){ addToCart(variant_id:$v, cart_token:$t){ cart_token order_id state total_chf lines{ name qty unit_price_chf } } }",
+            "variables": "{ \"v\": 2, \"t\": \"{{cartToken}}\" }"
+          }
+        }
+      }
+    },
+    {
+      "name": "4. Read cart",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "query($c:String!){ cart(cart_token:$c){ cart_token order_id state total_chf lines{ name qty } } }",
+            "variables": "{ \"c\": \"{{cartToken}}\" }"
+          }
+        }
+      }
+    },
+    {
+      "name": "5. Login (portal auth) + merge guest cart",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const j = pm.response.json();",
+              "if (j.data && j.data.login) { pm.collectionVariables.set('token', j.data.login.token); console.log('saved JWT'); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "mutation($e:String!,$p:String!,$g:String){ login(email:$e, password:$p, guest_cart_token:$g){ token partner_id display_name cart{ state total_chf lines{ name qty } } } }",
+            "variables": "{ \"e\": \"buyer@example.com\", \"p\": \"demo1234\", \"g\": \"{{cartToken}}\" }"
+          }
+        }
+      }
+    },
+    {
+      "name": "6. Merge guest cart (needs the JWT)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "mutation($g:String!){ mergeGuestCart(guest_cart_token:$g){ state total_chf lines{ name qty } } }",
+            "variables": "{ \"g\": \"{{cartToken}}\" }"
+          }
+        }
+      }
+    },
+    {
+      "name": "7. Error: over-order out-of-stock variant",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}",
+        "body": {
+          "mode": "graphql",
+          "graphql": {
+            "query": "mutation($v:Int!){ addToCart(variant_id:$v, qty:5){ cart_token } }",
+            "variables": "{ \"v\": 4 }"
+          }
+        }
+      }
+    }
+  ]
+}
