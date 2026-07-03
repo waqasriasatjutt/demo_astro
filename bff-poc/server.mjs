@@ -129,6 +129,14 @@ async function addLine(orderId, vid, qty) {
   }
 }
 
+let PORTAL_GROUP
+async function portalGroup() {
+  if (PORTAL_GROUP) return PORTAL_GROUP
+  const ref = await call('ir.model.data', 'search_read', [[['module', '=', 'base'], ['name', '=', 'group_portal']]], { fields: ['res_id'], limit: 1 })
+  PORTAL_GROUP = ref.length ? ref[0].res_id : false
+  return PORTAL_GROUP
+}
+
 // ---------- GraphQL ----------
 const typeDefs = /* GraphQL */ `
   type AttrKV { k: String!  v: String! }
@@ -137,14 +145,17 @@ const typeDefs = /* GraphQL */ `
   type CartLine { line_id: Int!  variant_id: Int!  name: String!  qty: Float!  unit_price_chf: Float!  subtotal_chf: Float! }
   type Cart { _contract: String!  cart_token: String  order_id: Int  partner_id: Int  state: String!  currency: String!  lines: [CartLine!]!  subtotal_chf: Float!  tax_chf: Float!  total_chf: Float! }
   type Session { _contract: String!  token: String!  partner_id: Int!  display_name: String!  cart: Cart }
+  type EmailCheck { email: String!  exists: Boolean! }
   type Query {
     products: [Variant!]!
     product(name: String! = "Hayabusa T3 Boxing Gloves"): ProductDetail!
     cart(cart_token: String!): Cart
+    checkEmail(email: String!): EmailCheck!
   }
   type Mutation {
     addToCart(cart_token: String, variant_id: Int!, qty: Float! = 1): Cart!
     login(email: String!, password: String! = "demo", guest_cart_token: String): Session!
+    register(email: String!, password: String!, name: String!, guest_cart_token: String): Session!
     mergeGuestCart(guest_cart_token: String!): Cart!
   }
 `
@@ -167,6 +178,11 @@ const resolvers = {
         variants: vs.map(v => ({ variant_id: v.id, sku: v.default_code, price_chf: v.lst_price, free_qty: v.free_qty, availability: availability(v.free_qty), name: v.display_name })) }
     },
     cart: async (_p, { cart_token }) => projectCart(await draftByToken(cart_token)),
+    // Fluid Auth — fast check so the UI shows Login (email exists) or expands Register (new).
+    checkEmail: async (_p, { email }) => {
+      const ids = await call('res.users', 'search', [[['login', '=', email]]], { limit: 1 })
+      return { email, exists: ids.length > 0 }
+    },
   },
   Mutation: {
     // Flow 1 — first add creates the draft sale.order in Odoo. Stock-guarded.
@@ -189,6 +205,19 @@ const resolvers = {
       if (!cuid) throw new GraphQLError('Invalid email or password.', { extensions: taxo('AUTH_INVALID_CREDENTIALS', { de: 'Ungültige E-Mail oder Passwort.', fr: 'E-mail ou mot de passe invalide.', it: 'Email o password non validi.', en: 'Invalid email or password.' }, 'auth', 401, false, 'odoo.exceptions.AccessDenied') })
       const [user] = await call('res.users', 'read', [[cuid], ['partner_id', 'name']])
       const partner = { id: user.partner_id[0], name: user.partner_id[1] || user.name, email }
+      const token = await issueJwt(partner)
+      let cartId = await activeCartFor(partner.id)
+      if (guest_cart_token) cartId = await doMerge(guest_cart_token, partner.id)
+      return { _contract: 'Customer@v1', token, partner_id: partner.id, display_name: partner.name, cart: await projectCart(cartId) }
+    },
+    // Fluid Auth — register a new portal customer, then log them straight in.
+    register: async (_p, { email, password, name, guest_cart_token }) => {
+      const existing = await call('res.users', 'search', [[['login', '=', email]]], { limit: 1 })
+      if (existing.length) throw new GraphQLError('An account with this email already exists.', { extensions: taxo('AUTH_INVALID_CREDENTIALS', { de: 'Ein Konto mit dieser E-Mail existiert bereits.', fr: 'Un compte avec cet e-mail existe déjà.', it: 'Esiste già un account con questa email.', en: 'An account with this email already exists.' }, 'auth', 409, false, 'bff') })
+      const pg = await portalGroup()
+      const cuid = await call('res.users', 'create', [{ name, login: email, email, password, group_ids: [[6, 0, [pg]]] }], { context: { no_reset_password: true } })
+      const [user] = await call('res.users', 'read', [[cuid], ['partner_id', 'name']])
+      const partner = { id: user.partner_id[0], name: user.partner_id[1] || name, email }
       const token = await issueJwt(partner)
       let cartId = await activeCartFor(partner.id)
       if (guest_cart_token) cartId = await doMerge(guest_cart_token, partner.id)

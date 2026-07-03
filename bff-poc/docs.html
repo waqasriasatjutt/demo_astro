@@ -117,6 +117,31 @@
   </div>
 
   <div class="op">
+    <h2>checkEmail <span class="tag q">query</span></h2>
+    <div class="desc">Fluid Auth step 1 — enter email first. If it <b>exists</b>, show the password field (Login); if <b>new</b>, expand Registration.</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>returns <code>{ email, exists }</code> — one fast Odoo lookup</td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"query($e:String!){ checkEmail(email:$e){ email exists } }","variables":{"e":"buyer@example.com"}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <div class="op">
+    <h2>register <span class="tag m">mutation</span></h2>
+    <div class="desc">Fluid Auth — new email path: creates the portal customer and logs them straight in (returns a Session, same shape as login).</div>
+    <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
+      <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>the new login</td></tr>
+      <tr><td><code>password</code> <span class="req">required</span></td><td>String</td><td></td></tr>
+      <tr><td><code>name</code> <span class="req">required</span></td><td>String</td><td>display name</td></tr>
+      <tr><td><code>guest_cart_token</code></td><td>String</td><td>optional — merges the guest cart into the new account</td></tr></table>
+    <label>Request body</label>
+    <textarea>{"query":"mutation($e:String!,$p:String!,$n:String!){ register(email:$e, password:$p, name:$n){ token partner_id display_name } }","variables":{"e":"newbuyer@example.test","p":"demo1234","n":"New Buyer"}}</textarea>
+    <button class="run" onclick="run(this)">Run</button>
+    <pre class="resp"></pre>
+  </div>
+
+  <div class="op">
     <h2>mergeGuestCart <span class="tag m">mutation</span> <span class="tag auth">needs token</span></h2>
     <div class="desc">Explicit guest → customer merge. Requires the JWT in the box at the top (auto-filled after Login).</div>
     <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
