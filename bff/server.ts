@@ -1,6 +1,6 @@
 // =============================================================================
 // BFF entry point. Node 20 + Hono + GraphQL Yoga + Typesense.
-// Astro talks to this — never to Odoo, never to Typesense.
+// Astro talks to this - never to Odoo, never to Typesense.
 // =============================================================================
 //
 // Endpoints exposed:
@@ -41,7 +41,7 @@ const ts = makeTypesenseClient();
 })();
 
 // -----------------------------------------------------------------------------
-// REST endpoint — the exact JSON-payload shape from the cover letter.
+// REST endpoint - the exact JSON-payload shape from the cover letter.
 // -----------------------------------------------------------------------------
 app.post("/api/catalog/facets", async (c) => {
   const body = await c.req.json();
@@ -96,7 +96,7 @@ app.post("/api/catalog/facets", async (c) => {
 });
 
 // -----------------------------------------------------------------------------
-// GraphQL endpoint — strict requirement per Christian's brief.
+// GraphQL endpoint - strict requirement per Christian's brief.
 // -----------------------------------------------------------------------------
 const yoga = createYoga({
   graphqlEndpoint: "/graphql",

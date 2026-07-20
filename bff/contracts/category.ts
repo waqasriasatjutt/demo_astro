@@ -1,8 +1,8 @@
 // =============================================================================
-// Category@v1 — Data Contract Rule (Rule 2)
+// Category@v1 - Data Contract Rule (Rule 2)
 // =============================================================================
 // Navigation + faceting node. A projection of the e-commerce category tree.
-// Carries the slug path (breadcrumb) and which attributes facet inside it —
+// Carries the slug path (breadcrumb) and which attributes facet inside it -
 // that list drives the Typesense facet_by at listing time (Rule 4).
 // =============================================================================
 

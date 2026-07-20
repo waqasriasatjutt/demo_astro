@@ -1,5 +1,5 @@
 # =============================================================================
-# Headless Odoo 19 — BFF GraphQL contracts (versioned). REVIEW COPY.
+# Headless Odoo 19 - BFF GraphQL contracts (versioned). REVIEW COPY.
 # Concepts-first: this is the shape Ashvin's Odoo output maps INTO and Zuanda's
 # Astro islands consume. Redline here before anyone builds against it.
 #
@@ -105,11 +105,11 @@ type Query {
 }
 
 type Mutation {
-  # Phase 1 #1 — authenticate against Odoo res.users, issue stateless JWT.
+  # Phase 1 #1 - authenticate against Odoo res.users, issue stateless JWT.
   login(email: String!, password: String!, guest_cart_token: ID): Session!
-  # Phase 1 #1 — first add creates the draft sale.order in Odoo via /jsonrpc.
+  # Phase 1 #1 - first add creates the draft sale.order in Odoo via /jsonrpc.
   addToCart(cart_token: ID, variant_id: Int!, qty: Int! = 1): Cart!
-  # Phase 1 #2 — explicit guest -> partner merge (also runs inside login()).
+  # Phase 1 #2 - explicit guest -> partner merge (also runs inside login()).
   mergeGuestCart(guest_cart_token: ID!): Cart!
 }
 

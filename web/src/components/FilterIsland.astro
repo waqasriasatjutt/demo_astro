@@ -1,6 +1,6 @@
 ---
 // =============================================================================
-// Prop Sparsity (Rule 3) — this island receives ONLY identifiers.
+// Prop Sparsity (Rule 3) - this island receives ONLY identifiers.
 // =============================================================================
 // Props (the small, serializable identifiers):
 //   - shop:      "martial-arts-ch"
@@ -8,7 +8,7 @@
 //   - category:  "boxing-gloves"
 //
 // NOT in props: products, facets, prices, names, images. All of that
-// is fetched by the island ITSELF from the BFF — never passed down
+// is fetched by the island ITSELF from the BFF - never passed down
 // as full JSON. The browser ships ~30 bytes of props instead of ~10 KB
 // of product data, so initial HTML stays small and CDN-cacheable.
 // =============================================================================
@@ -35,7 +35,7 @@ const propsJson = JSON.stringify({ shop, locale, category });
   <section>
     <div class="flex justify-between items-baseline mb-4">
       <h2 class="text-2xl font-semibold">Boxhandschuhe</h2>
-      <div class="text-sm text-gray-500"><span id="count">–</span> Produkte</div>
+      <div class="text-sm text-gray-500"><span id="count">-</span> Produkte</div>
     </div>
     <div id="grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4"></div>
     <div id="empty" class="hidden text-gray-500 mt-8">Keine Produkte für diese Auswahl.</div>
@@ -43,7 +43,7 @@ const propsJson = JSON.stringify({ shop, locale, category });
 </div>
 
 <script is:inline>
-  // Plain JS — runs client-side. NOTHING here calls Odoo or Typesense directly.
+  // Plain JS - runs client-side. NOTHING here calls Odoo or Typesense directly.
   // All data comes from the BFF (/api/catalog/facets).
   (function () {
     var island = document.getElementById("filter-island");
@@ -84,7 +84,7 @@ const propsJson = JSON.stringify({ shop, locale, category });
             "</label>";
         }).join("");
         block.innerHTML = '<div class="font-medium mb-2">' + labels[key] + "</div>" +
-          (list || '<div class="text-xs text-gray-400">—</div>');
+          (list || '<div class="text-xs text-gray-400">-</div>');
         root.appendChild(block);
       });
       root.querySelectorAll('input[type="checkbox"]').forEach(function (box) {

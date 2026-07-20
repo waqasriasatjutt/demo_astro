@@ -1,5 +1,5 @@
 // =============================================================================
-// Variant@v1 — Data Contract Rule (Rule 2)
+// Variant@v1 - Data Contract Rule (Rule 2)
 // =============================================================================
 // product.product level: the exact SKU a customer buys. Carries attributes,
 // the live (pricelist-resolved) price, and per-variant STOCK. Product@v1 is the
@@ -7,7 +7,7 @@
 // add-to-cart resolve against.
 //
 // Stock is Ashvin's requirement, expressed as a contract so all three layers
-// agree on ONE availability rule — Astro never computes it, Odoo owns the
+// agree on ONE availability rule - Astro never computes it, Odoo owns the
 // numbers, the BFF derives the state.
 // =============================================================================
 
@@ -22,7 +22,7 @@ export type Availability = z.infer<typeof Availability>;
 
 export const StockSchema = z.object({
   free_qty: z.number(),                 // Odoo product.product.free_qty (on-hand - reserved)
-  availability: Availability,           // DERIVED, see deriveAvailability — single source of truth
+  availability: Availability,           // DERIVED, see deriveAvailability - single source of truth
   low_stock_threshold: z.number().int().nonnegative().default(5),
   continue_selling: z.boolean().default(false), // Odoo "allow out-of-stock order" / sell at 0
 });
@@ -60,7 +60,7 @@ export function deriveAvailability(
 /**
  * Prop Sparsity (Rule 3): the island gets id + price + availability. The raw
  * free_qty number is only surfaced when low (so the UI can say "only 3 left"),
- * never otherwise — we don't leak exact inventory to the browser.
+ * never otherwise - we don't leak exact inventory to the browser.
  */
 export function toStorefrontVariant(v: Variant, _locale: Locale) {
   return {

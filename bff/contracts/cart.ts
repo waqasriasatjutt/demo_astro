@@ -1,8 +1,8 @@
 // =============================================================================
-// Cart@v1 — Data Contract Rule (Rule 2)
+// Cart@v1 - Data Contract Rule (Rule 2)
 // =============================================================================
 // A cart IS a draft sale.order in Odoo. The BFF does not keep a parallel cart
-// store — it projects the draft order so there is one source of truth. A guest
+// store - it projects the draft order so there is one source of truth. A guest
 // cart is a draft sale.order on the public partner + an opaque cart_token; on
 // login it is re-homed to the authenticated partner (the merge, deliverable #2).
 // =============================================================================

@@ -1,4 +1,4 @@
-// Phase 1 BFF — Auth & cart lifecycle, guest-cart merge, error taxonomy.
+// Phase 1 BFF - Auth & cart lifecycle, guest-cart merge, error taxonomy.
 // Talks to Odoo 19 over JSON-RPC. Astro would hit this; never Odoo directly.
 // GraphiQL at /graphql.
 
@@ -9,7 +9,7 @@ import { GraphQLError } from 'graphql'
 import { SignJWT, jwtVerify, generateKeyPair } from 'jose'
 import { readFileSync } from 'node:fs'
 
-// All Odoo connection values come from env — nothing sensitive is committed.
+// All Odoo connection values come from env - nothing sensitive is committed.
 const ODOO_URL = process.env.ODOO_URL || 'https://your-odoo.example'
 const DB = process.env.ODOO_DB || 'odoo'
 const LOGIN = process.env.ODOO_LOGIN || 'admin'
@@ -178,14 +178,14 @@ const resolvers = {
         variants: vs.map(v => ({ variant_id: v.id, sku: v.default_code, price_chf: v.lst_price, free_qty: v.free_qty, availability: availability(v.free_qty), name: v.display_name })) }
     },
     cart: async (_p, { cart_token }) => projectCart(await draftByToken(cart_token)),
-    // Fluid Auth — fast check so the UI shows Login (email exists) or expands Register (new).
+    // Fluid Auth - fast check so the UI shows Login (email exists) or expands Register (new).
     checkEmail: async (_p, { email }) => {
       const ids = await call('res.users', 'search', [[['login', '=', email]]], { limit: 1 })
       return { email, exists: ids.length > 0 }
     },
   },
   Mutation: {
-    // Flow 1 — first add creates the draft sale.order in Odoo. Stock-guarded.
+    // Flow 1 - first add creates the draft sale.order in Odoo. Stock-guarded.
     addToCart: async (_p, { cart_token, variant_id, qty }, ctx) => {
       const v = await variant(variant_id)
       if (qty > v.free_qty) throw new GraphQLError('Not enough stock for this item.', { extensions: taxo('CART_STOCK_INSUFFICIENT', MAP[0].msg) })
@@ -198,7 +198,7 @@ const resolvers = {
       await addLine(orderId, variant_id, qty)
       return projectCart(orderId)
     },
-    // Flow 1+2 — portal auth: verify the shopper against Odoo res.users, then
+    // Flow 1+2 - portal auth: verify the shopper against Odoo res.users, then
     // issue the JWT and merge a guest cart if one is passed.
     login: async (_p, { email, password, guest_cart_token }) => {
       const cuid = await rpc('common', 'authenticate', [DB, email, password, {}])
@@ -210,7 +210,7 @@ const resolvers = {
       if (guest_cart_token) cartId = await doMerge(guest_cart_token, partner.id)
       return { _contract: 'Customer@v1', token, partner_id: partner.id, display_name: partner.name, cart: await projectCart(cartId) }
     },
-    // Fluid Auth — register a new portal customer, then log them straight in.
+    // Fluid Auth - register a new portal customer, then log them straight in.
     register: async (_p, { email, password, name, guest_cart_token }) => {
       const existing = await call('res.users', 'search', [[['login', '=', email]]], { limit: 1 })
       if (existing.length) throw new GraphQLError('An account with this email already exists.', { extensions: taxo('AUTH_INVALID_CREDENTIALS', { de: 'Ein Konto mit dieser E-Mail existiert bereits.', fr: 'Un compte avec cet e-mail existe déjà.', it: 'Esiste già un account con questa email.', en: 'An account with this email already exists.' }, 'auth', 409, false, 'bff') })
@@ -223,7 +223,7 @@ const resolvers = {
       if (guest_cart_token) cartId = await doMerge(guest_cart_token, partner.id)
       return { _contract: 'Customer@v1', token, partner_id: partner.id, display_name: partner.name, cart: await projectCart(cartId) }
     },
-    // Flow 2 — explicit guest -> partner merge (requires JWT).
+    // Flow 2 - explicit guest -> partner merge (requires JWT).
     mergeGuestCart: async (_p, { guest_cart_token }, ctx) => {
       if (!ctx.customer) throw new GraphQLError('auth required', { extensions: taxo('AUTH_TOKEN_INVALID', { de: '', fr: '', it: '', en: 'Authentication required.' }, 'auth', 401, false, 'bff') })
       return projectCart(await doMerge(guest_cart_token, Number(ctx.customer.sub)))

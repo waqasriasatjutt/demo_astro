@@ -1,10 +1,10 @@
 // =============================================================================
-// Search Engine Offload (Rule 4) — the indexer side.
+// Search Engine Offload (Rule 4) - the indexer side.
 // =============================================================================
 // The BFF owns the search index. Odoo's job ends at the OdooClient boundary.
 // The BFF normalises Odoo records against the versioned contract, drops
 // anything whose validation_state is not "live", and upserts the rest into
-// Typesense. The storefront then queries Typesense via the BFF — Odoo is
+// Typesense. The storefront then queries Typesense via the BFF - Odoo is
 // never on the hot path of a customer click.
 // =============================================================================
 
@@ -65,7 +65,7 @@ export async function ensureCollection(ts: Typesense) {
 export async function syncOnce(odoo: OdooClient, ts: Typesense) {
   await ensureCollection(ts);
   const raw = await odoo.fetchAllProducts();
-  // Contract validation — anything that doesn't match the contract is
+  // Contract validation - anything that doesn't match the contract is
   // dropped LOUDLY so we can find drift fast.
   const validated: Product[] = [];
   for (const p of raw) {

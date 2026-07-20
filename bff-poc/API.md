@@ -1,10 +1,10 @@
 # BFF API reference (Phase 1)
 
 **One endpoint:** `POST https://poc.way4tech.com/graphql` with body `{ "query": "...", "variables": {...} }`.
-**Live, always-current docs:** open the URL and click **Docs** (top-right) — GraphQL introspects itself.
+**Live, always-current docs:** open the URL and click **Docs** (top-right) - GraphQL introspects itself.
 **Auth:** send `Authorization: Bearer <token>` (from `login`) for calls that act as the customer.
 
-There is no list of URLs — you pick the operation in the request body. Below is every operation.
+There is no list of URLs - you pick the operation in the request body. Below is every operation.
 
 ## Queries
 

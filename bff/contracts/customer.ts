@@ -1,5 +1,5 @@
 // =============================================================================
-// Customer@v1 — Data Contract Rule (Rule 2)
+// Customer@v1 - Data Contract Rule (Rule 2)
 // =============================================================================
 // The customer identity the storefront sees. It is a PROJECTION of Odoo
 // res.partner (+ the res.users login), never the raw Odoo record. The BFF owns
@@ -31,7 +31,7 @@ export type Address = z.infer<typeof AddressSchema>;
 
 export const CustomerSchema = z.object({
   _contract: z.literal(CONTRACT_VERSION),
-  partner_id: z.number().int(),         // res.partner id — the canonical customer key
+  partner_id: z.number().int(),         // res.partner id - the canonical customer key
   email: z.string().email(),
   display_name: z.string(),
   locale: LocaleSchema,                 // preferred locale, drives i18n resolution

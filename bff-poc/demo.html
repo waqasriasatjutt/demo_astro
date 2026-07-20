@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Headless storefront — Phase 1 demo</title>
+<title>Headless storefront - Phase 1 demo</title>
 <style>
   :root { color-scheme: dark }
   * { box-sizing: border-box }
@@ -30,9 +30,9 @@
   <small>browser → BFF (<code>/graphql</code>) → Odoo · nothing hits Odoo directly</small>
 </header>
 <div class="wrap">
-  <div class="cart"><small>CART</small><div id="cartbody">empty — add something below</div></div>
+  <div class="cart"><small>CART</small><div id="cartbody">empty - add something below</div></div>
   <div class="grid" id="grid">loading…</div>
-  <p style="margin-top:22px"><small>Every card + button here is one <code>fetch()</code> to the BFF. Add to cart and a draft order shows up in Odoo &rarr; Sales &rarr; Orders. Try the out-of-stock one — the button is disabled from live stock, and forcing it returns a structured error.</small></p>
+  <p style="margin-top:22px"><small>Every card + button here is one <code>fetch()</code> to the BFF. Add to cart and a draft order shows up in Odoo &rarr; Sales &rarr; Orders. Try the out-of-stock one - the button is disabled from live stock, and forcing it returns a structured error.</small></p>
 </div>
 <script>
   const API = "/graphql";

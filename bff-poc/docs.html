@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Headless BFF — Phase 1 API</title>
+<title>Headless BFF - Phase 1 API</title>
 <style>
   * { box-sizing: border-box }
   body { font-family: system-ui, -apple-system, Segoe UI, sans-serif; margin: 0; color: #1c2333; background: #f6f7f9; line-height: 1.5 }
@@ -34,20 +34,20 @@
 </head>
 <body>
 <header>
-  <h1>Headless BFF — Phase 1 API</h1>
+  <h1>Headless BFF - Phase 1 API</h1>
   <div class="url">POST https://poc.way4tech.com/graphql</div>
 </header>
 <div class="wrap">
 
   <div class="intro">
     One endpoint. Every call is <strong>POST</strong> to <code>/graphql</code> with header <code>Content-Type: application/json</code> and a body
-    <code>{ "query": "...", "variables": { ... } }</code>. The <strong>Run</strong> buttons below hit the live staging Odoo — edit the body and re-run.
-    Auth calls need <code>Authorization: Bearer &lt;token&gt;</code> — paste a token here after logging in:
+    <code>{ "query": "...", "variables": { ... } }</code>. The <strong>Run</strong> buttons below hit the live staging Odoo - edit the body and re-run.
+    Auth calls need <code>Authorization: Bearer &lt;token&gt;</code> - paste a token here after logging in:
     <div class="authbar">
       <input id="jwt" placeholder="JWT goes here (auto-filled after you Run Login)">
     </div>
     Test customer: <code>buyer@example.com</code> / <code>demo1234</code>.
-    <label>Same call as a curl (note the full URL — that's the endpoint for every request):</label>
+    <label>Same call as a curl (note the full URL - that's the endpoint for every request):</label>
     <pre class="resp">curl -X POST https://poc.way4tech.com/graphql \
   -H "Content-Type: application/json" \
   -d '{"query":"{ products { variant_id sku availability price_chf } }"}'</pre>
@@ -109,7 +109,7 @@
     <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
       <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>portal login</td></tr>
       <tr><td><code>password</code> <span class="req">required</span></td><td>String</td><td>wrong password → <code>AUTH_INVALID_CREDENTIALS</code></td></tr>
-      <tr><td><code>guest_cart_token</code></td><td>String</td><td>optional — merges that cart</td></tr></table>
+      <tr><td><code>guest_cart_token</code></td><td>String</td><td>optional - merges that cart</td></tr></table>
     <label>Request body</label>
     <textarea>{"query":"mutation($e:String!,$p:String!,$g:String){ login(email:$e, password:$p, guest_cart_token:$g){ token partner_id display_name cart{ state total_chf lines{ name qty } } } }","variables":{"e":"buyer@example.com","p":"demo1234","g":null}}</textarea>
     <button class="run" onclick="run(this)">Run</button>
@@ -118,9 +118,9 @@
 
   <div class="op">
     <h2>checkEmail <span class="tag q">query</span></h2>
-    <div class="desc">Fluid Auth step 1 — enter email first. If it <b>exists</b>, show the password field (Login); if <b>new</b>, expand Registration.</div>
+    <div class="desc">Fluid Auth step 1 - enter email first. If it <b>exists</b>, show the password field (Login); if <b>new</b>, expand Registration.</div>
     <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
-      <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>returns <code>{ email, exists }</code> — one fast Odoo lookup</td></tr></table>
+      <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>returns <code>{ email, exists }</code> - one fast Odoo lookup</td></tr></table>
     <label>Request body</label>
     <textarea>{"query":"query($e:String!){ checkEmail(email:$e){ email exists } }","variables":{"e":"buyer@example.com"}}</textarea>
     <button class="run" onclick="run(this)">Run</button>
@@ -129,12 +129,12 @@
 
   <div class="op">
     <h2>register <span class="tag m">mutation</span></h2>
-    <div class="desc">Fluid Auth — new email path: creates the portal customer and logs them straight in (returns a Session, same shape as login).</div>
+    <div class="desc">Fluid Auth - new email path: creates the portal customer and logs them straight in (returns a Session, same shape as login).</div>
     <table><tr><th>Param</th><th>Type</th><th>Notes</th></tr>
       <tr><td><code>email</code> <span class="req">required</span></td><td>String</td><td>the new login</td></tr>
       <tr><td><code>password</code> <span class="req">required</span></td><td>String</td><td></td></tr>
       <tr><td><code>name</code> <span class="req">required</span></td><td>String</td><td>display name</td></tr>
-      <tr><td><code>guest_cart_token</code></td><td>String</td><td>optional — merges the guest cart into the new account</td></tr></table>
+      <tr><td><code>guest_cart_token</code></td><td>String</td><td>optional - merges the guest cart into the new account</td></tr></table>
     <label>Request body</label>
     <textarea>{"query":"mutation($e:String!,$p:String!,$n:String!){ register(email:$e, password:$p, name:$n){ token partner_id display_name } }","variables":{"e":"newbuyer@example.test","p":"demo1234","n":"New Buyer"}}</textarea>
     <button class="run" onclick="run(this)">Run</button>

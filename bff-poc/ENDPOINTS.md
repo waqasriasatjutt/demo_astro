@@ -1,4 +1,4 @@
-# Phase 1 BFF — complete endpoint reference
+# Phase 1 BFF - complete endpoint reference
 
 Read this if you're used to REST. GraphQL uses **one URL** and you choose the operation
 in the request body. Every call below is the same HTTP shape:
@@ -86,7 +86,7 @@ Pass `cart_token` too (in variables) to add to an existing cart; leave it out to
 { "query": "mutation($e:String!,$g:String){ login(email:$e, guest_cart_token:$g){ token partner_id display_name cart{ state total_chf lines{ name qty } } } }",
   "variables": { "e": "buyer@example.com", "g": "cart_564474b7" } }
 ```
-**Response** — `cart.state` becomes `active`, the guest cart carried over. `token` is the JWT (use it in the `Authorization` header on later calls).
+**Response** - `cart.state` becomes `active`, the guest cart carried over. `token` is the JWT (use it in the `Authorization` header on later calls).
 ```json
 { "data": { "login": {
   "token": "eyJhbGciOiJSUzI1NiJ9.eyJ...",
@@ -110,7 +110,7 @@ Pass `cart_token` too (in variables) to add to an existing cart; leave it out to
 
 ## ERRORS
 
-Any failure returns `errors[]` instead of `data`. Example — adding 5 of an out-of-stock variant:
+Any failure returns `errors[]` instead of `data`. Example - adding 5 of an out-of-stock variant:
 ```json
 { "query": "mutation($v:Int!){ addToCart(variant_id:$v, qty:5){ cart_token } }", "variables": { "v": 4 } }
 ```
@@ -137,7 +137,7 @@ curl -X POST https://poc.way4tech.com/graphql \
   -d '{"query":"{ products { variant_id sku availability price_chf } }"}'
 ```
 
-## Summary — all operations
+## Summary - all operations
 
 | # | Operation | Type | Auth | Purpose |
 |---|---|---|---|---|

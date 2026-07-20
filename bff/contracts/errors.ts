@@ -1,5 +1,5 @@
 // =============================================================================
-// Error@v1 — Error Taxonomy (Phase 1 deliverable #3)
+// Error@v1 - Error Taxonomy (Phase 1 deliverable #3)
 // =============================================================================
 // Native Odoo exceptions are unstructured strings meant for the Odoo web client.
 // The BFF translates them into a CLOSED set of machine-readable GraphQL error
@@ -11,7 +11,7 @@ import { z } from "zod";
 
 export const CONTRACT_VERSION = "Error@v1";
 
-// Closed set — the frontend switches on these; adding one is a version bump.
+// Closed set - the frontend switches on these; adding one is a version bump.
 export const ErrorCode = z.enum([
   // auth
   "AUTH_INVALID_CREDENTIALS",

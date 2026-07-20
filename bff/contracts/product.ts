@@ -54,7 +54,7 @@ export type Product = z.infer<typeof ProductSchema>;
 
 /**
  * Resolve a multi-lang field with explicit fallback chain.
- * The fallback chain is part of the contract — not the frontend's problem.
+ * The fallback chain is part of the contract - not the frontend's problem.
  */
 export function resolveI18n(field: I18nString, locale: Locale): string {
   return field[locale] || field.de || field.en || "";
@@ -62,7 +62,7 @@ export function resolveI18n(field: I18nString, locale: Locale): string {
 
 /**
  * Strip an internal Product to a tight, sparse DTO ready for the storefront.
- * No internal flags, no version key, no internal IDs — only what the island
+ * No internal flags, no version key, no internal IDs - only what the island
  * needs to render. This is what enforces Rule 3 (Prop Sparsity) on the
  * server side: the DTO is small by construction, not by frontend discipline.
  */

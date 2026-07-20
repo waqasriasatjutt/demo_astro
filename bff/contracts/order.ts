@@ -1,5 +1,5 @@
 // =============================================================================
-// Order@v1 — Data Contract Rule (Rule 2)
+// Order@v1 - Data Contract Rule (Rule 2)
 // =============================================================================
 // The draft sale.order created in Odoo via /jsonrpc the moment a JWT-bearing
 // session first adds to cart (Phase 1 deliverable #1). Order@v1 is the read

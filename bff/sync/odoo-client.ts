@@ -1,11 +1,11 @@
 // =============================================================================
-// BFF Law (Rule 1) — Astro is NOT in this file. Only the BFF talks to Odoo.
+// BFF Law (Rule 1) - Astro is NOT in this file. Only the BFF talks to Odoo.
 // =============================================================================
 // In production, OdooClient.fetchAllProducts() would call Odoo's /jsonrpc
 // endpoint with the API key from BFF env vars only. For this short demo we
 // inline a small fixture so the demo container has no external dependency,
 // but the seam (OdooClient class, async signature, contract-mapping) is the
-// real shape — swapping in real /jsonrpc is a one-method change.
+// real shape - swapping in real /jsonrpc is a one-method change.
 // =============================================================================
 
 import { Product, CONTRACT_VERSION } from "../contracts/product.js";
@@ -36,7 +36,7 @@ export class OdooClient {
 }
 
 // -----------------------------------------------------------------------------
-// Demo fixture — 8 boxing gloves across 3 brands, deliberately uneven so the
+// Demo fixture - 8 boxing gloves across 3 brands, deliberately uneven so the
 // interdependent-facets behaviour is visible (Hayabusa has no XS, Venum has
 // no red, RDX has only 14oz, etc.).
 // -----------------------------------------------------------------------------
@@ -159,7 +159,7 @@ const MOCK_PRODUCTS: Product[] = [
     image: "https://placehold.co/300x300/900/fff?text=RDX+F7+Red",
     validation_state: "live",
   },
-  // Intentionally NOT live — proves validation_state gating from Rule 2.
+  // Intentionally NOT live - proves validation_state gating from Rule 2.
   {
     _contract: CONTRACT_VERSION,
     slug: "rdx-f7-12oz-white-draft",
